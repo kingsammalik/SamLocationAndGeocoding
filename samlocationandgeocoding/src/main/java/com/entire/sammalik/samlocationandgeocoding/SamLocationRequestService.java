@@ -48,6 +48,25 @@ public class SamLocationRequestService implements
 
 
     }
+    
+    
+    public SamLocationRequestService(Context context, long interval, long fastest_interval) {
+        this.context = context;
+        mGoogleApiClient = new GoogleApiClient.Builder(context)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(interval);
+        mLocationRequest.setFastestInterval(fastest_interval);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+
+
+
+    }
 
     public interface SamLocationListener {
 
