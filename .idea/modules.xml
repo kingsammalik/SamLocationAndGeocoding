@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/LibraryLocation.iml" filepath="$PROJECT_DIR$/LibraryLocation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SamLocationAndGeocoding.iml" filepath="$PROJECT_DIR$/SamLocationAndGeocoding.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/samlocationandgeocoding/samlocationandgeocoding.iml" filepath="$PROJECT_DIR$/samlocationandgeocoding/samlocationandgeocoding.iml" />
     </modules>

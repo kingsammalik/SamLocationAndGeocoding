@@ -1,38 +1,142 @@
 package com.entire.sammalik.samlocationandgeocoding;
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStates;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.single.PermissionListener;
 
 
 public class SamLocationRequestService implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
+
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
-    Context context;
-    private static final long INTERVAL = 1000 * 10;
-    private static final long FASTEST_INTERVAL = 1000 * 5;
+    private Context context;
+    private static long INTERVAL = 1000 * 10;
+    private static long FASTEST_INTERVAL = 1000 * 5;
 
-    Address geolocation;
+    private Address geolocation;
 
-    SamLocationListener samLocationListener;
+    private SamLocationListener samLocationListener;
 
 
-    public SamLocationRequestService(Context context) {
+    public SamLocationRequestService(final Context context,final SamLocationListener samLocationListener) {
         this.context = context;
+        this.samLocationListener = samLocationListener;
+
+        askForPermission();
+
+    }
+
+    public SamLocationRequestService(Context context, long interval, long fastest_interval,final SamLocationListener samLocationListener) {
+        this.context = context;
+        INTERVAL=interval;
+        FASTEST_INTERVAL=fastest_interval;
+        this.samLocationListener = samLocationListener;
+
+        askForPermission();
+
+    }
+
+    private void showSettingsDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Need Permissions");
+        builder.setMessage("This app needs permission to use this feature. You can grant them in app settings.");
+        builder.setPositiveButton("GOTO SETTINGS", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+                openSettings();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        builder.show();
+
+    }
+
+    // navigating user to app settings
+    private void openSettings() {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        Uri uri = Uri.fromParts("package", context.getPackageName(), null);
+        intent.setData(uri);
+        ((Activity) context).startActivityForResult(intent, 101);
+    }
+
+    private void askForPermission(){
+        Dexter.withActivity((Activity) context)
+                .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                .withListener(new PermissionListener() {
+                    @Override
+                    public void onPermissionGranted(PermissionGrantedResponse response) {
+
+                        setGoogleClient();
+
+                    }
+
+                    @Override
+                    public void onPermissionDenied(PermissionDeniedResponse response) {
+                        // check for permanent denial of permission
+                        if (response.isPermanentlyDenied()) {
+                            // navigate user to app settings
+                            showSettingsDialog();
+                        }
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+                        token.continuePermissionRequest();
+                    }
+                }).check();
+    }
+    
+    
+
+
+    public interface SamLocationListener {
+
+        public void onLocationUpdate(Location location, Address address);
+
+    }
+
+    private void setGoogleClient(){
+
+        Log.e("samlocationlistener", "setupgoogleclient");
+
         mGoogleApiClient = new GoogleApiClient.Builder(context)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -44,39 +148,57 @@ public class SamLocationRequestService implements
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
 
+        //**************************
+        builder.setAlwaysShow(true); //this is the key ingredient
+        //**************************
 
-
+        PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result) {
+                final Status status = result.getStatus();
+                final LocationSettingsStates state = result.getLocationSettingsStates();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        // All location settings are satisfied. The client can initialize location
+                        // requests here.
+                        Log.e("samlocationlistener", "setupgoogleclient");
+                        mGoogleApiClient.connect();
+                        if (mGoogleApiClient.isConnected()) {
+                            startLocationUpdates();
+                            Log.d("", "Location update resumed .....................");
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        // Location settings are not satisfied. But could be fixed by showing the user
+                        // a dialog.
+                        Log.e("samlocationlistener", "resolution");
+                        try {
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            status.startResolutionForResult(
+                                    (Activity) context, 1000);
+                        } catch (IntentSender.SendIntentException e) {
+                            // Ignore the error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        Log.e("samlocationlistener", "settingschnage");
+                        // Location settings are not satisfied. However, we have no way to fix the
+                        // settings so we won't show the dialog.
+                        break;
+                }
+            }
+        });
     }
-    
-    
-    public SamLocationRequestService(Context context, long interval, long fastest_interval) {
-        this.context = context;
-        mGoogleApiClient = new GoogleApiClient.Builder(context)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(interval);
-        mLocationRequest.setFastestInterval(fastest_interval);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
 
 
-
-    }
-
-    public interface SamLocationListener {
-
-        public void onLocationUpdate(Location location, Address address);
-
-    }
-
-
-
-    public void executeService(final SamLocationListener samLocationListener) {
+    private void executeService(final SamLocationListener samLocationListener) {
         this.samLocationListener=samLocationListener;
         mGoogleApiClient.connect();
         if (mGoogleApiClient.isConnected()) {
@@ -85,9 +207,6 @@ public class SamLocationRequestService implements
         }
     }
 
-    public void getsamlocationlistener(final SamLocationListener samLocationListener){
-        this.samLocationListener=samLocationListener;
-    }
 
     @Override
     public void onConnected(Bundle bundle) {

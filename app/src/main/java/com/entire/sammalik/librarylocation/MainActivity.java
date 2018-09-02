@@ -28,18 +28,23 @@ public class MainActivity extends AppCompatActivity  {
             @Override
             public void onClick(View view) {
                 if (checkPlayServices()) {
-                    mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                    if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                        buildAlertMessageNoGps();
+                   // mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                    //if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                      //  buildAlertMessageNoGps();
 
-                    }
-                    samLocationRequestService = new SamLocationRequestService(MainActivity.this);
-                    samLocationRequestService.executeService(new SamLocationRequestService.SamLocationListener() {
+                    //}
+                    samLocationRequestService = new SamLocationRequestService(MainActivity.this, new SamLocationRequestService.SamLocationListener() {
                         @Override
                         public void onLocationUpdate(Location location, Address address) {
                             Toast.makeText(MainActivity.this,"mapped",Toast.LENGTH_SHORT).show();
                         }
                     });
+                    /*samLocationRequestService.executeService(new SamLocationRequestService.SamLocationListener() {
+                        @Override
+                        public void onLocationUpdate(Location location, Address address) {
+                            Toast.makeText(MainActivity.this,"mapped",Toast.LENGTH_SHORT).show();
+                        }
+                    });*/
                 }
             }
         });
@@ -47,6 +52,11 @@ public class MainActivity extends AppCompatActivity  {
 
     }
 
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
     @Override
     protected void onResume() {
