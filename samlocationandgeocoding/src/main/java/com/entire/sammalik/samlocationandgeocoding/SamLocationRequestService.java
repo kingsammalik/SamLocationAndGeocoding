@@ -11,22 +11,30 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionDeniedResponse;
@@ -35,7 +43,7 @@ import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
 
 
-public class SamLocationRequestService implements
+public class SamLocationRequestService extends LocationCallback implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
@@ -133,6 +141,8 @@ public class SamLocationRequestService implements
 
     }
 
+
+
     private void setGoogleClient(){
 
         Log.e("samlocationlistener", "setupgoogleclient");
@@ -155,37 +165,42 @@ public class SamLocationRequestService implements
             builder.setAlwaysShow(true); //this is the key ingredient
             //**************************
 
-            PendingResult<LocationSettingsResult> result =
-                    LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
-            result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            Task<LocationSettingsResponse> result =
+                    LocationServices.getSettingsClient(context).checkLocationSettings( builder.build());
+
+            result.addOnFailureListener((Activity) context, new OnFailureListener() {
                 @Override
-                public void onResult(LocationSettingsResult result) {
-                    final Status status = result.getStatus();
-                    final LocationSettingsStates state = result.getLocationSettingsStates();
-                    switch (status.getStatusCode()) {
-                        case LocationSettingsStatusCodes.SUCCESS:
-                            // All location settings are satisfied. The client can initialize location
-                            // requests here.
-                            break;
-                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                            // Location settings are not satisfied. But could be fixed by showing the user
-                            // a dialog.
-                            try {
-                                // Show the dialog by calling startResolutionForResult(),
-                                // and check the result in onActivityResult().
-                                status.startResolutionForResult(
-                                        (Activity) context, 1000);
-                            } catch (IntentSender.SendIntentException e) {
-                                // Ignore the error.
-                            }
-                            break;
-                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                            // Location settings are not satisfied. However, we have no way to fix the
-                            // settings so we won't show the dialog.
-                            break;
+                public void onFailure(@NonNull Exception e) {
+                    int statusCode = ((ApiException) e).getStatusCode();
+                    if (statusCode
+                            == LocationSettingsStatusCodes
+                            .RESOLUTION_REQUIRED) {
+                        // Location settings are not satisfied, but this can
+                        // be fixed by showing the user a dialog
+                        try {
+                            // Show the dialog by calling
+                            // startResolutionForResult(), and check the
+                            // result in onActivityResult()
+                            ResolvableApiException resolvable =
+                                    (ResolvableApiException) e;
+                            resolvable.startResolutionForResult
+                                    ((Activity) context,
+                                            1000);
+                        } catch (IntentSender.SendIntentException sendEx) {
+                            // Ignore the error
+                        }
                     }
                 }
-            });             }
+            });
+
+            result.addOnSuccessListener((Activity) context, new OnSuccessListener<LocationSettingsResponse>() {
+                @Override
+                public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                    Log.e("tag","success");
+                }
+            });
+
+        }
 
         /*mGoogleApiClient = new GoogleApiClient.Builder(context)
                 .addConnectionCallbacks(this)
@@ -305,16 +320,16 @@ public class SamLocationRequestService implements
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        PendingResult<Status> pendingResult = LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, this);
+        LocationServices.getFusedLocationProviderClient(context).requestLocationUpdates(
+                 mLocationRequest,this, null);
         Log.d("LocationRequestService", "Location update started ..............: ");
     }
 
 
 
     public void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(
-                mGoogleApiClient, this);
+        LocationServices.getFusedLocationProviderClient(context).removeLocationUpdates(
+                 this);
         Log.d("LocationRequestService", "Location update stopped .......................");
     }
 
