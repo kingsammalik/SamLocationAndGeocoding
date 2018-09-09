@@ -179,7 +179,7 @@ public class SamLocationRequestService extends LocationCallback  {
             result.addOnSuccessListener((Activity) context, new OnSuccessListener<LocationSettingsResponse>() {
                 @Override
                 public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                    Log.e("tag","success");
+                    startLocationUpdates();
                 }
             });
 
