@@ -69,6 +69,7 @@ public class SamLocationRequestService extends LocationCallback  {
     }
 
     private void showSettingsDialog() {
+
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Need Permissions");
         builder.setMessage("This app needs permission to use this feature. You can grant them in app settings.");
