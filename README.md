@@ -36,7 +36,7 @@ Then use it like this.
 
 
 
- 	@Override
+        @Override
     	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         	super.onActivityResult(requestCode, resultCode, data);
         	if (requestCode == 1000){
@@ -44,4 +44,4 @@ Then use it like this.
         	}
     	}
 	
-Please do take special attention towards using the same request code in the activityresult which you supplied in the SamLocationRequest constructor.
+Please do take special attention towards using the same request code in the OnActivityResult which you supplied in the SamLocationRequest constructor.
