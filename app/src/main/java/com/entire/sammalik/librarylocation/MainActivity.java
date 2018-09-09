@@ -8,6 +8,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -27,25 +28,14 @@ public class MainActivity extends AppCompatActivity  {
         ((Button)findViewById(R.id.check)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (checkPlayServices()) {
-                   // mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                    //if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                      //  buildAlertMessageNoGps();
 
-                    //}
                     samLocationRequestService = new SamLocationRequestService(MainActivity.this, new SamLocationRequestService.SamLocationListener() {
                         @Override
                         public void onLocationUpdate(Location location, Address address) {
                             Toast.makeText(MainActivity.this,"mapped",Toast.LENGTH_SHORT).show();
                         }
-                    });
-                    /*samLocationRequestService.executeService(new SamLocationRequestService.SamLocationListener() {
-                        @Override
-                        public void onLocationUpdate(Location location, Address address) {
-                            Toast.makeText(MainActivity.this,"mapped",Toast.LENGTH_SHORT).show();
-                        }
-                    });*/
-                }
+                    },1000);
+
             }
         });
 
@@ -56,6 +46,10 @@ public class MainActivity extends AppCompatActivity  {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1000){
+            Log.e("tag","result code "+resultCode);
+            samLocationRequestService.startLocationUpdates();
+        }
     }
 
     @Override
