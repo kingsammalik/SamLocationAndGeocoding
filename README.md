@@ -14,17 +14,34 @@ Add it in your root build.gradle at the end of repositories:
 	  	}
 	  }
 	
-	 Add the dependency
+ Add the dependency
 	 
-	 compile 'com.github.kingsammalik:SamLocationAndGeocoding:1.1.0'
+	 	dependencies {
+	        implementation 'com.github.kingsammalik:SamLocationAndGeocoding:2.0'
+	}
+
 	 
+
+Then use it like this. 
 	 
-	 Then use it like this. 
-	 
+	  SamLocationRequestService samLocationRequestService;
 	  
-            new SamLocationRequestService(MainActivity.this).executeService(new SamLocationRequestService.SamLocationListener() {
+	  
+            samLocationRequestService = new SamLocationRequestService(MainActivity.this, new SamLocationRequestService.SamLocationListener() {
                         @Override
                         public void onLocationUpdate(Location location, Address address) {
                             Toast.makeText(MainActivity.this,"mapped",Toast.LENGTH_SHORT).show();
                         }
-                    });
+                    },1000);
+
+
+
+ 	@Override
+    	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        	super.onActivityResult(requestCode, resultCode, data);
+        	if (requestCode == 1000){
+            	samLocationRequestService.startLocationUpdates();
+        	}
+    	}
+	
+Please do take special attention towards using the same request code in the activityresult which you supplied in the SamLocationRequest constructor.
