@@ -16,9 +16,10 @@ Add it in your root build.gradle at the end of repositories:
 	
  Add the dependency
 	 
-	 	dependencies {
-	        implementation 'com.github.kingsammalik:SamLocationAndGeocoding:2.0'
+	 		dependencies {
+	        implementation 'com.github.kingsammalik:SamLocationAndGeocoding:2.0.0'
 	}
+
 
 	 
 
@@ -33,6 +34,17 @@ Then use it like this.
                             Toast.makeText(MainActivity.this,"mapped",Toast.LENGTH_SHORT).show();
                         }
                     },1000);
+		    
+or if you would like to enter your custom intervals then use this 
+
+	samLocationRequestService = new SamLocationRequestService(MainActivity.this,1000,2000, new SamLocationRequestService.SamLocationListener() {
+                        @Override
+                        public void onLocationUpdate(Location location, Address address) {
+                            Toast.makeText(MainActivity.this,"mapped",Toast.LENGTH_SHORT).show();
+                        }
+                    },1000);
+		    
+1000 is to specify the intervals and 2000 is for fastest intervals.
 
 
 
