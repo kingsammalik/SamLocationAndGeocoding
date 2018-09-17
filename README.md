@@ -1,6 +1,6 @@
 # SamLocationAndGeocoding
 [![](https://jitpack.io/v/kingsammalik/SamLocationAndGeocoding.svg)](https://jitpack.io/#kingsammalik/SamLocationAndGeocoding)
-
+[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-SamLocationAndGeocoding-brightgreen.svg?style=flat-square)](https://android-arsenal.com/details/1/4381)
 
 
 This is a simplified library to track the user location and address corresponding to it.
