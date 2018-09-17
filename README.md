@@ -42,7 +42,7 @@ or if you would like to enter your custom intervals then use this
                         public void onLocationUpdate(Location location, Address address) {
                             Toast.makeText(MainActivity.this,"mapped",Toast.LENGTH_SHORT).show();
                         }
-                    },1000);
+                    },10);
 		    
 1000 is to specify the intervals and 2000 is for fastest intervals.
 
