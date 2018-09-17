@@ -33,7 +33,7 @@ Then use it like this.
                         public void onLocationUpdate(Location location, Address address) {
                             Toast.makeText(MainActivity.this,"mapped",Toast.LENGTH_SHORT).show();
                         }
-                    },1000);
+                    },10);
 		    
 or if you would like to enter your custom intervals then use this 
 
@@ -51,7 +51,7 @@ or if you would like to enter your custom intervals then use this
         @Override
     	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         	super.onActivityResult(requestCode, resultCode, data);
-        	if (requestCode == 1000){
+        	if (requestCode == 10){
             	samLocationRequestService.startLocationUpdates();
         	}
     	}
